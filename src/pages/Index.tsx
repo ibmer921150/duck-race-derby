@@ -15,10 +15,14 @@ const THEME_TITLES: Record<RaceTheme, string> = {
   marble: '🔮 Marble Racing! 🏁',
 };
 
-const Index = () => {
-  const [names, setNames] = useState('');
-  const [countdownTime, setCountdownTime] = useState(3);
+const Index: React.FC = () => {
+  // Local state hooks - always called first and in the same order
+  const [names, setNames] = useState<string>('');
+  const [countdownTime, setCountdownTime] = useState<number>(3);
   const [theme, setTheme] = useState<RaceTheme>('duck');
+  
+  // Custom hook - always called in the same order
+  const raceState = usePoolRace();
   
   const {
     racers,
@@ -32,14 +36,15 @@ const Index = () => {
     initializeRacers,
     startRace,
     resetRace,
-  } = usePoolRace();
+  } = raceState;
 
-  // Initialize racers when names change
+  // Effect hook - always called in the same order
   useEffect(() => {
     const nameList = names.split('\n');
     initializeRacers(nameList);
   }, [names, initializeRacers]);
 
+  // Event handlers (not hooks)
   const handleStart = () => {
     startRace(countdownTime);
   };
