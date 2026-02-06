@@ -46,6 +46,7 @@ export const useRace = () => {
   
   const animationRef = useRef<number>();
   const finishOrderRef = useRef(0);
+  const countdownIntervalRef = useRef<NodeJS.Timeout>();
 
   const initializeRacers = useCallback((names: string[]) => {
     const validNames = names.filter(n => n.trim()).slice(0, 2000);
@@ -54,8 +55,9 @@ export const useRace = () => {
       name: name.trim(),
       color: DUCK_COLORS[index % DUCK_COLORS.length],
       position: 0,
-      speed: 0.5 + Math.random() * 1.5, // Random speed between 0.5 and 2
+      speed: 0.5 + Math.random() * 1.5,
       finished: false,
+      warmupOffset: 0,
     }));
     setRacers(newRacers);
     setWinner(null);
@@ -63,20 +65,6 @@ export const useRace = () => {
     setRaceFinished(false);
     finishOrderRef.current = 0;
   }, []);
-
-  // Warmup animation during countdown
-  useEffect(() => {
-    if (!isCountingDown) return;
-    
-    const warmupInterval = setInterval(() => {
-      setRacers(prev => prev.map(racer => ({
-        ...racer,
-        warmupOffset: (Math.random() - 0.5) * 20, // Random offset -10 to +10 pixels
-      })));
-    }, 150);
-    
-    return () => clearInterval(warmupInterval);
-  }, [isCountingDown]);
 
   const startCountdown = useCallback((countdownTime: number, onComplete: () => void) => {
     if (countdownTime === 0) {
@@ -87,10 +75,10 @@ export const useRace = () => {
     setIsCountingDown(true);
     setCurrentCountdown(countdownTime);
     
-    const interval = setInterval(() => {
+    countdownIntervalRef.current = setInterval(() => {
       setCurrentCountdown(prev => {
         if (prev <= 1) {
-          clearInterval(interval);
+          clearInterval(countdownIntervalRef.current);
           setIsCountingDown(false);
           onComplete();
           return 0;
@@ -100,26 +88,21 @@ export const useRace = () => {
     }, 1000);
   }, []);
 
-  const startRace = useCallback((countdownTime: number) => {
-    // Reset positions and assign new random speeds
-    setRacers(prev => prev.map(racer => ({
-      ...racer,
-      position: 0,
-      speed: 0.5 + Math.random() * 1.5,
-      finished: false,
-      finishTime: undefined,
-      finishOrder: undefined,
-    })));
-    setWinner(null);
-    setLoser(null);
-    setRaceFinished(false);
-    finishOrderRef.current = 0;
+  // Warmup animation during countdown
+  useEffect(() => {
+    if (!isCountingDown) return;
     
-    startCountdown(countdownTime, () => {
-      setIsRacing(true);
-    });
-  }, [startCountdown]);
+    const warmupInterval = setInterval(() => {
+      setRacers(prev => prev.map(racer => ({
+        ...racer,
+        warmupOffset: (Math.random() - 0.5) * 20,
+      })));
+    }, 150);
+    
+    return () => clearInterval(warmupInterval);
+  }, [isCountingDown]);
 
+  // Race animation
   useEffect(() => {
     if (!isRacing) return;
     
@@ -130,7 +113,6 @@ export const useRace = () => {
         const updated = prev.map(racer => {
           if (racer.finished) return racer;
           
-          // Add some randomness to movement
           const wobble = (Math.random() - 0.5) * 0.3;
           const newPosition = racer.position + racer.speed + wobble;
           
@@ -148,12 +130,10 @@ export const useRace = () => {
           return { ...racer, position: newPosition };
         });
         
-        // Check if race is complete
         const allFinished = updated.every(r => r.finished);
         if (allFinished) {
           setIsRacing(false);
           
-          // Find winner and loser
           const sorted = [...updated].sort((a, b) => (a.finishOrder || 0) - (b.finishOrder || 0));
           setWinner(sorted[0]);
           setLoser(sorted[sorted.length - 1]);
@@ -174,6 +154,26 @@ export const useRace = () => {
       }
     };
   }, [isRacing]);
+
+  const startRace = useCallback((countdownTime: number) => {
+    setRacers(prev => prev.map(racer => ({
+      ...racer,
+      position: 0,
+      speed: 0.5 + Math.random() * 1.5,
+      finished: false,
+      finishTime: undefined,
+      finishOrder: undefined,
+      warmupOffset: 0,
+    })));
+    setWinner(null);
+    setLoser(null);
+    setRaceFinished(false);
+    finishOrderRef.current = 0;
+    
+    startCountdown(countdownTime, () => {
+      setIsRacing(true);
+    });
+  }, [startCountdown]);
 
   const resetRace = useCallback(() => {
     if (animationRef.current) {
