@@ -99,7 +99,7 @@ const PoolRaceTrack: React.FC<PoolRaceTrackProps> = ({
     <div 
       ref={trackRef}
       className={`relative rounded-2xl overflow-hidden shadow-xl bg-gradient-to-b ${THEME_BACKGROUNDS[theme]}`}
-      style={{ height: '500px' }}
+      style={{ minHeight: '600px', height: '70vh', maxHeight: '800px' }}
     >
       {/* Track header */}
       <div className="bg-black/20 px-4 py-2 text-center z-20 relative">

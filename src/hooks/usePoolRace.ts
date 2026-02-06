@@ -33,11 +33,12 @@ export const usePoolRace = () => {
   const [raceFinished, setRaceFinished] = useState(false);
   const [isSprintPhase, setIsSprintPhase] = useState(false);
   
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | null>(null);
   const finishOrderRef = useRef(0);
-  const countdownIntervalRef = useRef<NodeJS.Timeout>();
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const raceStartTimeRef = useRef<number>(0);
-  const raceDurationRef = useRef<number>(10000); // Will be calculated based on countdown
+  const raceDurationRef = useRef<number>(10000);
+  const isRacingRef = useRef(false);
 
   const initializeRacers = useCallback((names: string[]) => {
     const validNames = names.filter(n => n.trim()).slice(0, 2000);
@@ -47,10 +48,10 @@ export const usePoolRace = () => {
       color: DUCK_COLORS[index % DUCK_COLORS.length],
       position: 0,
       speed: 0,
-      baseSpeed: 0.3 + Math.random() * 0.7, // Base speed varies by racer
+      baseSpeed: 0.3 + Math.random() * 0.7,
       finished: false,
       warmupOffset: 0,
-      yOffset: (Math.random() - 0.5) * 8, // Slight Y variation
+      yOffset: (Math.random() - 0.5) * 8,
     }));
     setRacers(newRacers);
     setWinner(null);
@@ -72,7 +73,9 @@ export const usePoolRace = () => {
     countdownIntervalRef.current = setInterval(() => {
       setCurrentCountdown(prev => {
         if (prev <= 1) {
-          clearInterval(countdownIntervalRef.current);
+          if (countdownIntervalRef.current) {
+            clearInterval(countdownIntervalRef.current);
+          }
           setIsCountingDown(false);
           onComplete();
           return 0;
@@ -90,7 +93,7 @@ export const usePoolRace = () => {
       setRacers(prev => prev.map(racer => ({
         ...racer,
         warmupOffset: (Math.random() - 0.5) * 15,
-        position: Math.random() * 3, // Slight movement at start
+        position: Math.random() * 3,
       })));
     }, 150);
     
@@ -99,60 +102,64 @@ export const usePoolRace = () => {
 
   // Race animation with sprint phase
   useEffect(() => {
-    if (!isRacing) return;
+    if (!isRacing) {
+      isRacingRef.current = false;
+      return;
+    }
     
+    isRacingRef.current = true;
     const startTime = raceStartTimeRef.current;
     const totalDuration = raceDurationRef.current;
     const sprintStartTime = totalDuration - SPRINT_DURATION;
     
+    let localFinishOrder = 0;
+    
     const animate = () => {
+      if (!isRacingRef.current) return;
+      
       const elapsed = Date.now() - startTime;
       const isInSprintPhase = elapsed >= sprintStartTime;
       
       setIsSprintPhase(isInSprintPhase);
       
       setRacers(prev => {
+        let allFinished = true;
+        
         const updated = prev.map(racer => {
           if (racer.finished) return racer;
+          
+          allFinished = false;
           
           let currentSpeed: number;
           
           if (isInSprintPhase) {
-            // Sprint phase: everyone speeds up dramatically
-            // Faster racers get a bigger boost
             const sprintProgress = (elapsed - sprintStartTime) / SPRINT_DURATION;
-            const sprintBoost = 1 + sprintProgress * 2; // Increases over time
+            const sprintBoost = 1 + sprintProgress * 2;
             currentSpeed = (racer.baseSpeed * 2 + Math.random() * 1.5) * sprintBoost;
           } else {
-            // Normal phase: random speed variations
-            // Some go fast, some go slow
             const speedVariation = Math.random();
             if (speedVariation > 0.8) {
-              // 20% chance to go fast
               currentSpeed = racer.baseSpeed * 2 + Math.random() * 0.5;
             } else if (speedVariation < 0.2) {
-              // 20% chance to go slow
               currentSpeed = racer.baseSpeed * 0.3 + Math.random() * 0.2;
             } else {
-              // 60% normal speed with variation
               currentSpeed = racer.baseSpeed * (0.5 + Math.random() * 0.8);
             }
           }
           
-          // Add wobble to Y position
-          const newYOffset = racer.yOffset! + (Math.random() - 0.5) * 2;
+          const newYOffset = (racer.yOffset || 0) + (Math.random() - 0.5) * 2;
           const clampedYOffset = Math.max(-15, Math.min(15, newYOffset));
           
           const newPosition = racer.position + currentSpeed;
           
           if (newPosition >= 100) {
-            finishOrderRef.current += 1;
+            localFinishOrder += 1;
             return {
               ...racer,
               position: 100,
               finished: true,
               finishTime: Date.now() - startTime,
-              finishOrder: finishOrderRef.current,
+              finishOrder: localFinishOrder,
               speed: currentSpeed,
             };
           }
@@ -165,8 +172,10 @@ export const usePoolRace = () => {
           };
         });
         
-        const allFinished = updated.every(r => r.finished);
-        if (allFinished) {
+        // Check if all finished after update
+        const nowAllFinished = updated.every(r => r.finished);
+        if (nowAllFinished && updated.length > 0) {
+          isRacingRef.current = false;
           setIsRacing(false);
           setIsSprintPhase(false);
           
@@ -179,7 +188,9 @@ export const usePoolRace = () => {
         return updated;
       });
       
-      animationRef.current = requestAnimationFrame(animate);
+      if (isRacingRef.current) {
+        animationRef.current = requestAnimationFrame(animate);
+      }
     };
     
     animationRef.current = requestAnimationFrame(animate);
@@ -192,10 +203,8 @@ export const usePoolRace = () => {
   }, [isRacing]);
 
   const startRace = useCallback((countdownTime: number) => {
-    // Calculate race duration based on countdown (longer countdown = longer race)
-    // Minimum 8 seconds, maximum 20 seconds
     const baseDuration = 8000;
-    const countdownBonus = countdownTime * 1500; // Each countdown second adds 1.5s to race
+    const countdownBonus = countdownTime * 1500;
     raceDurationRef.current = Math.min(baseDuration + countdownBonus, 20000);
     
     setRacers(prev => prev.map(racer => ({
@@ -222,6 +231,7 @@ export const usePoolRace = () => {
   }, [startCountdown]);
 
   const resetRace = useCallback(() => {
+    isRacingRef.current = false;
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
     }
