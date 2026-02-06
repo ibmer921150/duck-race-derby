@@ -127,7 +127,7 @@
 
 @layer utilities {
   .animate-waddle {
-    animation: waddle 0.3s ease-in-out infinite;
+    animation: waddle 0.2s ease-in-out infinite;
   }
   
   .animate-splash {
@@ -135,11 +135,15 @@
   }
   
   .animate-celebrate {
-    animation: celebrate 0.5s ease-out;
+    animation: celebrate 0.5s ease-out infinite;
   }
   
   .animate-countdown {
     animation: countdown-pulse 1s ease-in-out infinite;
+  }
+  
+  .animate-speed-line {
+    animation: speed-line 0.3s ease-out infinite;
   }
 }
 
@@ -163,6 +167,11 @@
 @keyframes countdown-pulse {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.2); opacity: 0.8; }
+}
+
+@keyframes speed-line {
+  0% { opacity: 0.8; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(-10px); }
 }
 
 /* Water wave effect */
