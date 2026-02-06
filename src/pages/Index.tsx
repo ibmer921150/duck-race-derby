@@ -95,6 +95,7 @@ const Index = () => {
               <RaceTrack
                 racers={racers}
                 isRacing={isRacing}
+                isCountingDown={isCountingDown}
                 winner={winner || undefined}
                 loser={loser || undefined}
               />
@@ -106,10 +107,10 @@ const Index = () => {
               </div>
             )}
             
-            {/* Show count of racers if more than 10 */}
-            {racers.length > 10 && (
+            {/* Show count of racers */}
+            {racers.length > 0 && (
               <p className="text-center text-muted-foreground">
-                Showing 10 of {racers.length} racers on track. All racers are participating!
+                {racers.length} racer{racers.length !== 1 ? 's' : ''} on track
               </p>
             )}
           </div>

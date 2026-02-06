@@ -9,6 +9,7 @@ interface Racer {
   finished: boolean;
   finishTime?: number;
   finishOrder?: number;
+  warmupOffset?: number;
 }
 
 const DUCK_COLORS = [
@@ -62,6 +63,20 @@ export const useRace = () => {
     setRaceFinished(false);
     finishOrderRef.current = 0;
   }, []);
+
+  // Warmup animation during countdown
+  useEffect(() => {
+    if (!isCountingDown) return;
+    
+    const warmupInterval = setInterval(() => {
+      setRacers(prev => prev.map(racer => ({
+        ...racer,
+        warmupOffset: (Math.random() - 0.5) * 20, // Random offset -10 to +10 pixels
+      })));
+    }, 150);
+    
+    return () => clearInterval(warmupInterval);
+  }, [isCountingDown]);
 
   const startCountdown = useCallback((countdownTime: number, onComplete: () => void) => {
     if (countdownTime === 0) {
