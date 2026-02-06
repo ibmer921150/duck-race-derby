@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import NameInput from '@/components/NameInput';
-import RaceTrack from '@/components/RaceTrack';
+import PoolRaceTrack from '@/components/PoolRaceTrack';
 import RaceControls from '@/components/RaceControls';
 import RaceResults from '@/components/RaceResults';
 import Leaderboard from '@/components/Leaderboard';
 import ThemeSelector from '@/components/ThemeSelector';
 import { RaceTheme } from '@/components/RaceCharacter';
-import { useRace } from '@/hooks/useRace';
+import { usePoolRace } from '@/hooks/usePoolRace';
 
 const THEME_TITLES: Record<RaceTheme, string> = {
   duck: '🦆 Duck Racing! 🏁',
@@ -28,10 +28,11 @@ const Index = () => {
     winner,
     loser,
     raceFinished,
+    isSprintPhase,
     initializeRacers,
     startRace,
     resetRace,
-  } = useRace();
+  } = usePoolRace();
 
   // Initialize racers when names change
   useEffect(() => {
@@ -111,14 +112,14 @@ const Index = () => {
           {/* Center - Race Track */}
           <div className="lg:col-span-2 space-y-4">
             {racers.length > 0 ? (
-              <RaceTrack
+              <PoolRaceTrack
                 racers={racers}
                 isRacing={isRacing}
                 isCountingDown={isCountingDown}
                 winner={winner || undefined}
-                loser={loser || undefined}
                 theme={theme}
                 raceFinished={raceFinished}
+                isSprintPhase={isSprintPhase}
               />
             ) : (
               <div className="bg-gradient-to-b from-secondary to-pond-dark rounded-2xl h-64 flex items-center justify-center">
@@ -126,14 +127,6 @@ const Index = () => {
                   🏁 Add some racers to see them here!
                 </p>
               </div>
-            )}
-            
-            {/* Racer count */}
-            {racers.length > 0 && (
-              <p className="text-center text-muted-foreground text-sm">
-                {racers.length} racer{racers.length !== 1 ? 's' : ''} competing
-                {racers.length > 20 && ' • Showing top 20 lanes'}
-              </p>
             )}
             
             {/* Winner/Loser announcement */}
