@@ -38,7 +38,7 @@ const RaceResults: React.FC<RaceResultsProps> = ({ winner, loser, isVisible }) =
             />
             {winner.name}
           </div>
-          <p className="text-sm opacity-80">Fastest duck in the pond! 🦆💨</p>
+          <p className="text-sm opacity-80">Champion of the race! 🏆💨</p>
         </div>
         
         {/* Loser Card */}
@@ -55,7 +55,7 @@ const RaceResults: React.FC<RaceResultsProps> = ({ winner, loser, isVisible }) =
             />
             {loser.name}
           </div>
-          <p className="text-sm text-muted-foreground">Better luck next time! 🦆😅</p>
+          <p className="text-sm text-muted-foreground">Better luck next time! 😅</p>
         </div>
       </div>
     </div>

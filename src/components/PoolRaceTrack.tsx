@@ -17,6 +17,7 @@ interface PoolRaceTrackProps {
   racers: Racer[];
   isRacing: boolean;
   isCountingDown?: boolean;
+  currentCountdown?: number;
   winner?: Racer;
   theme: RaceTheme;
   raceFinished?: boolean;
@@ -34,6 +35,7 @@ const PoolRaceTrack: React.FC<PoolRaceTrackProps> = ({
   racers, 
   isRacing, 
   isCountingDown, 
+  currentCountdown,
   winner, 
   theme,
   raceFinished,
@@ -104,23 +106,39 @@ const PoolRaceTrack: React.FC<PoolRaceTrackProps> = ({
       {/* Track header */}
       <div className="bg-black/20 px-4 py-2 text-center z-20 relative">
         <span className="text-white/90 font-bold text-sm">
-          {isCountingDown ? '🏁 Get Ready!' : 
-           isSprintPhase ? '🔥 SPRINT! SPRINT! SPRINT!' :
+          {isSprintPhase ? '🔥 SPRINT! SPRINT! SPRINT!' :
            isRacing ? '🏃 GO GO GO!' : 
            raceFinished ? '🎉 Race Complete!' : '🏁 Ready to Race'}
         </span>
       </div>
 
-      {/* Start line */}
-      <div className="absolute left-[8%] top-12 bottom-4 w-1 bg-white/50 z-10" />
+      {/* Countdown overlay */}
+      {isCountingDown && (
+        <div className="absolute inset-0 flex items-center justify-center z-50 bg-black/40">
+          <div className="text-8xl font-bold text-white animate-countdown drop-shadow-lg">
+            {currentCountdown > 0 ? currentCountdown : 'GO!'}
+          </div>
+        </div>
+      )}
+
+      {/* Start line with label */}
+      <div className="absolute left-[8%] top-12 bottom-4 w-1 bg-white/50 z-10">
+        <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-white font-bold text-sm whitespace-nowrap">
+          START
+        </div>
+      </div>
       
-      {/* Finish line */}
+      {/* Finish line with label */}
       <div 
         className="absolute right-[5%] top-12 bottom-4 w-3 z-10"
         style={{
           background: 'repeating-linear-gradient(0deg, white 0px, white 8px, #333 8px, #333 16px)'
         }}
-      />
+      >
+        <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-white font-bold text-sm whitespace-nowrap">
+          FINISH
+        </div>
+      </div>
 
       {/* Racing area - all racers in same pool */}
       <div className="absolute inset-0 top-12 bottom-4 left-0 right-0">

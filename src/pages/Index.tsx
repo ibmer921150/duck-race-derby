@@ -121,6 +121,7 @@ const Index: React.FC = () => {
                 racers={racers}
                 isRacing={isRacing}
                 isCountingDown={isCountingDown}
+                currentCountdown={currentCountdown}
                 winner={winner || undefined}
                 theme={theme}
                 raceFinished={raceFinished}
