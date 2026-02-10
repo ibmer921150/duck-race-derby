@@ -15,6 +15,7 @@ const THEME_TITLES: Record<RaceTheme, string> = {
   marble: '🔮 Marble Racing! 🏁',
 };
 
+// Force clean remount after hook count change
 const Index: React.FC = () => {
   // Local state hooks - always called first and in the same order
   const [names, setNames] = useState<string>('');
