@@ -85,22 +85,9 @@ export const usePoolRace = () => {
     }, 1000);
   }, []);
 
-  // Warmup animation during countdown - racers jitter in place
-  useEffect(() => {
-    if (!isCountingDown) return;
-    
-    const warmupInterval = setInterval(() => {
-      setRacers(prev => prev.map(racer => ({
-        ...racer,
-        warmupOffset: (Math.random() - 0.5) * 15,
-        position: Math.random() * 2,
-      })));
-    }, 150);
-    
-    return () => clearInterval(warmupInterval);
-  }, [isCountingDown]);
+  // No warmup jitter - racers move via the main race animation loop
 
-  // Race animation with sprint phase
+  // Race animation - characters move based on countdown duration and track length
   useEffect(() => {
     if (!isRacing) {
       isRacingRef.current = false;
@@ -110,42 +97,37 @@ export const usePoolRace = () => {
     isRacingRef.current = true;
     const startTime = raceStartTimeRef.current;
     const totalDuration = raceDurationRef.current;
-    const sprintStartTime = totalDuration - SPRINT_DURATION;
     
     let localFinishOrder = 0;
+    let lastFrameTime = startTime;
     
     const animate = () => {
       if (!isRacingRef.current) return;
       
-      const elapsed = Date.now() - startTime;
-      const isInSprintPhase = elapsed >= sprintStartTime;
+      const now = Date.now();
+      const elapsed = now - startTime;
+      const deltaTime = now - lastFrameTime;
+      lastFrameTime = now;
       
-      setIsSprintPhase(isInSprintPhase);
+      // Target speed: 100% track / totalDuration ms, per frame
+      const baseFrameSpeed = (100 / totalDuration) * deltaTime;
       
       setRacers(prev => {
-        let allFinished = true;
-        
         const updated = prev.map(racer => {
           if (racer.finished) return racer;
           
-          allFinished = false;
-          
-          let currentSpeed: number;
-          
-          if (isInSprintPhase) {
-            const sprintProgress = (elapsed - sprintStartTime) / SPRINT_DURATION;
-            const sprintBoost = 1 + sprintProgress * 2;
-            currentSpeed = (racer.baseSpeed * 2 + Math.random() * 1.5) * sprintBoost;
+          // Randomness: each racer gets a multiplier between 0.4 and 1.8
+          const rand = Math.random();
+          let speedMultiplier: number;
+          if (rand > 0.9) {
+            speedMultiplier = 1.4 + Math.random() * 0.4; // burst
+          } else if (rand < 0.1) {
+            speedMultiplier = 0.3 + Math.random() * 0.2; // slow down
           } else {
-            const speedVariation = Math.random();
-            if (speedVariation > 0.8) {
-              currentSpeed = racer.baseSpeed * 2 + Math.random() * 0.5;
-            } else if (speedVariation < 0.2) {
-              currentSpeed = racer.baseSpeed * 0.3 + Math.random() * 0.2;
-            } else {
-              currentSpeed = racer.baseSpeed * (0.5 + Math.random() * 0.8);
-            }
+            speedMultiplier = 0.7 + Math.random() * 0.6; // normal variance
           }
+          
+          const currentSpeed = baseFrameSpeed * racer.baseSpeed * speedMultiplier * 1.8;
           
           const newYOffset = (racer.yOffset || 0) + (Math.random() - 0.5) * 2;
           const clampedYOffset = Math.max(-15, Math.min(15, newYOffset));
@@ -158,7 +140,7 @@ export const usePoolRace = () => {
               ...racer,
               position: 100,
               finished: true,
-              finishTime: Date.now() - startTime,
+              finishTime: elapsed,
               finishOrder: localFinishOrder,
               speed: currentSpeed,
             };
@@ -172,7 +154,6 @@ export const usePoolRace = () => {
           };
         });
         
-        // Check if all finished after update
         const nowAllFinished = updated.every(r => r.finished);
         if (nowAllFinished && updated.length > 0) {
           isRacingRef.current = false;
@@ -224,14 +205,15 @@ export const usePoolRace = () => {
     setIsSprintPhase(false);
     finishOrderRef.current = 0;
     
-    // Start racing immediately with countdown overlay
+    // Race duration = countdown time (min 5s) — racers finish around when countdown hits 0
+    const duration = Math.max(countdownTime * 1000, 5000);
     raceStartTimeRef.current = Date.now();
-    raceDurationRef.current = Math.max((countdownTime + 2) * 1000, 5000); // race lasts countdown + 2 extra seconds
+    raceDurationRef.current = duration;
     setIsRacing(true);
     
     if (countdownTime > 0) {
       startCountdown(countdownTime, () => {
-        // Countdown finished, race continues
+        // Countdown finished — race continues until all cross finish
       });
     }
   }, [startCountdown]);
