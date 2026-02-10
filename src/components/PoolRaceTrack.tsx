@@ -110,23 +110,23 @@ const PoolRaceTrack: React.FC<PoolRaceTrackProps> = ({
       className={`relative rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-b ${THEME_BACKGROUNDS[theme]} border-4 border-white/20`}
       style={{ minHeight: '600px', height: '70vh', maxHeight: '800px' }}
     >
-      {/* Top bar with countdown timer */}
-      <div className="bg-black/30 backdrop-blur-sm px-4 py-3 text-center z-20 relative flex items-center justify-center gap-4">
+      {/* Top bar with countdown timer - compact centered banner */}
+      <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-black/30 backdrop-blur-sm px-3 py-1 text-center z-20 rounded-lg flex items-center justify-center gap-2">
         {/* Countdown timer display at top */}
         {isCountingDown && currentCountdown > 0 ? (
-          <div className="flex items-center gap-3">
-            <span className="text-white/80 font-bold text-lg">⏱️</span>
-            <span className={`font-black text-3xl drop-shadow-lg ${
+          <div className="flex items-center gap-2">
+            <span className="text-white/80 font-bold text-base">⏱️</span>
+            <span className={`font-black text-2xl drop-shadow-lg ${
               currentCountdown <= 3 ? 'text-yellow-300 animate-countdown' : 'text-white'
             }`}>
               {currentCountdown}
             </span>
-            <span className="text-white/80 font-bold text-lg">
+            <span className="text-white/80 font-bold text-base">
               {currentCountdown <= 3 ? '🔥' : '⏱️'}
             </span>
           </div>
         ) : (
-          <span className="text-white font-bold text-lg tracking-wide">
+          <span className="text-white font-bold text-sm tracking-wide">
             {isSprintPhase ? '🔥 SPRINT! SPRINT! SPRINT! 🔥' :
              isRacing ? '🏃 GO GO GO! 🏃' : 
              raceFinished ? '🎉 Race Complete! 🎉' : '🏁 Ready to Race! 🏁'}
@@ -153,26 +153,26 @@ const PoolRaceTrack: React.FC<PoolRaceTrackProps> = ({
       )}
 
       {/* Start line */}
-      <div className="absolute left-[8%] top-14 bottom-4 w-1.5 bg-white/60 z-10 rounded-full">
-        <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-sm text-white font-black text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
+      <div className="absolute left-[8%] top-12 bottom-4 w-1.5 bg-white/60 z-10 rounded-full">
+        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-sm text-white font-black text-xs px-2 py-0.5 rounded-full whitespace-nowrap z-30">
           🏁 START
         </div>
       </div>
       
       {/* Finish line */}
       <div 
-        className="absolute right-[5%] top-14 bottom-4 w-4 z-10 rounded-sm"
+        className="absolute right-[5%] top-12 bottom-4 w-4 z-10 rounded-sm"
         style={{
           background: 'repeating-linear-gradient(0deg, white 0px, white 8px, #222 8px, #222 16px)'
         }}
       >
-        <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-sm text-white font-black text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
+        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-sm text-white font-black text-xs px-2 py-0.5 rounded-full whitespace-nowrap z-30">
           🏆 FINISH
         </div>
       </div>
 
       {/* Racing area */}
-      <div className="absolute inset-0 top-14 bottom-4 left-0 right-0">
+      <div className="absolute inset-0 top-12 bottom-4 left-0 right-0">
         {racers.map((racer, index) => {
           const isWinner = winner?.id === racer.id;
           const xPosition = 8 + Math.min(racer.position, 100) * 0.82;
@@ -247,9 +247,8 @@ const PoolRaceTrack: React.FC<PoolRaceTrackProps> = ({
 
       {/* Sprint phase indicator */}
       {isSprintPhase && (
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute inset-0 bg-orange-500/10 animate-pulse" />
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-red-500 to-orange-500 text-white px-6 py-2 rounded-full font-black text-lg animate-bounce shadow-lg shadow-red-500/30">
+        <div className="absolute top-10 left-1/2 -translate-x-1/2 pointer-events-none z-30">
+          <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-4 py-1 rounded-full font-black text-sm animate-bounce shadow-lg shadow-red-500/30">
             🔥 FINAL SPRINT! 🔥
           </div>
         </div>

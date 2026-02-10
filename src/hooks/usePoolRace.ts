@@ -98,14 +98,22 @@ export const usePoolRace = () => {
     const totalDuration = raceDurationRef.current;
     
     let localFinishOrder = 0;
-    let lastFrameTime = startTime;
+    let lastFrameTime: number | null = null;
     
     const animate = () => {
       if (!isRacingRef.current) return;
       
       const now = Date.now();
       const elapsed = now - startTime;
-      const deltaTime = now - lastFrameTime;
+      
+      // Initialize lastFrameTime on first frame
+      if (lastFrameTime === null) {
+        lastFrameTime = now - 20; // Ensure first frame has good deltaTime
+      }
+      
+      let deltaTime = now - lastFrameTime;
+      // Ensure deltaTime is reasonable (between 10-60ms)
+      deltaTime = Math.max(10, Math.min(60, deltaTime));
       lastFrameTime = now;
       
       // Base speed: cover 100% of track in totalDuration
@@ -134,10 +142,7 @@ export const usePoolRace = () => {
             speedMultiplier *= 1.3;
           }
           
-          const currentSpeed = baseFrameSpeed * racer.baseSpeed * speedMultiplier * 1.8;
-          
-          const newYOffset = (racer.yOffset || 0) + (Math.random() - 0.5) * 2;
-          const clampedYOffset = Math.max(-15, Math.min(15, newYOffset));
+          const currentSpeed = baseFrameSpeed * racer.baseSpeed * speedMultiplier * 3.2;
           
           const newPosition = racer.position + currentSpeed;
           
@@ -157,7 +162,6 @@ export const usePoolRace = () => {
             ...racer, 
             position: newPosition, 
             speed: currentSpeed,
-            yOffset: clampedYOffset,
           };
         });
         
@@ -214,8 +218,9 @@ export const usePoolRace = () => {
     setIsSprintPhase(false);
     finishOrderRef.current = 0;
     
-    // Race duration = countdown time (min 5s)
-    const duration = Math.max(countdownTime * 1000, 5000);
+    // Race duration = exactly the countdown time
+    // Characters will move from start to finish in this timeframe
+    const duration = countdownTime > 0 ? countdownTime * 1000 : 3000;
     raceStartTimeRef.current = Date.now();
     raceDurationRef.current = duration;
     
