@@ -85,7 +85,7 @@ export const usePoolRace = () => {
     }, 1000);
   }, []);
 
-  // Warmup animation during countdown
+  // Warmup animation during countdown - racers jitter in place
   useEffect(() => {
     if (!isCountingDown) return;
     
@@ -93,7 +93,7 @@ export const usePoolRace = () => {
       setRacers(prev => prev.map(racer => ({
         ...racer,
         warmupOffset: (Math.random() - 0.5) * 15,
-        position: Math.random() * 3,
+        position: Math.random() * 2,
       })));
     }, 150);
     
@@ -224,10 +224,16 @@ export const usePoolRace = () => {
     setIsSprintPhase(false);
     finishOrderRef.current = 0;
     
-    startCountdown(countdownTime, () => {
-      raceStartTimeRef.current = Date.now();
-      setIsRacing(true);
-    });
+    // Start racing immediately with countdown overlay
+    raceStartTimeRef.current = Date.now();
+    raceDurationRef.current = Math.max((countdownTime + 2) * 1000, 5000); // race lasts countdown + 2 extra seconds
+    setIsRacing(true);
+    
+    if (countdownTime > 0) {
+      startCountdown(countdownTime, () => {
+        // Countdown finished, race continues
+      });
+    }
   }, [startCountdown]);
 
   const resetRace = useCallback(() => {
