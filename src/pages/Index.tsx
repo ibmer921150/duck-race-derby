@@ -35,6 +35,7 @@ const Index: React.FC = () => {
     raceFinished,
     isSprintPhase,
     totalCountdown,
+    renderTrigger,
     initializeRacers,
     startRace,
     resetRace,
@@ -120,6 +121,7 @@ const Index: React.FC = () => {
           <div className="lg:col-span-2 space-y-4">
             {racers.length > 0 ? (
               <PoolRaceTrack
+                key={`race-${renderTrigger}`}
                 racers={racers}
                 isRacing={isRacing}
                 isCountingDown={isCountingDown}
