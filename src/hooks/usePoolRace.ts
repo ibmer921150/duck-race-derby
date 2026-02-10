@@ -85,7 +85,10 @@ export const usePoolRace = () => {
     }, 1000);
   }, []);
 
-  // No warmup jitter - racers move via the main race animation loop
+  // Preserve hook order - warmup removed but useEffect kept for stable hook count
+  useEffect(() => {
+    // intentionally empty — movement handled by race animation loop
+  }, [isCountingDown]);
 
   // Race animation - characters move based on countdown duration and track length
   useEffect(() => {
