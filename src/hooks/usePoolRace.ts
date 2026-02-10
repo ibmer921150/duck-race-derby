@@ -21,8 +21,6 @@ const DUCK_COLORS = [
   '#607D8B', '#F44336', '#2196F3', '#4CAF50', '#FFEB3B',
 ];
 
-const SPRINT_DURATION = 5000; // Last 5 seconds sprint phase
-
 export const usePoolRace = () => {
   const [racers, setRacers] = useState<Racer[]>([]);
   const [isRacing, setIsRacing] = useState(false);
@@ -32,6 +30,7 @@ export const usePoolRace = () => {
   const [loser, setLoser] = useState<Racer | null>(null);
   const [raceFinished, setRaceFinished] = useState(false);
   const [isSprintPhase, setIsSprintPhase] = useState(false);
+  const [totalCountdown, setTotalCountdown] = useState(0);
   
   const animationRef = useRef<number | null>(null);
   const finishOrderRef = useRef(0);
@@ -61,14 +60,12 @@ export const usePoolRace = () => {
     finishOrderRef.current = 0;
   }, []);
 
-  const startCountdown = useCallback((countdownTime: number, onComplete: () => void) => {
-    if (countdownTime === 0) {
-      onComplete();
-      return;
-    }
+  const startCountdown = useCallback((countdownTime: number) => {
+    if (countdownTime === 0) return;
     
     setIsCountingDown(true);
     setCurrentCountdown(countdownTime);
+    setTotalCountdown(countdownTime);
     
     countdownIntervalRef.current = setInterval(() => {
       setCurrentCountdown(prev => {
@@ -77,7 +74,6 @@ export const usePoolRace = () => {
             clearInterval(countdownIntervalRef.current);
           }
           setIsCountingDown(false);
-          onComplete();
           return 0;
         }
         return prev - 1;
@@ -85,12 +81,12 @@ export const usePoolRace = () => {
     }, 1000);
   }, []);
 
-  // Preserve hook order - warmup removed but useEffect kept for stable hook count
+  // Preserve hook order
   useEffect(() => {
     // intentionally empty — movement handled by race animation loop
   }, [isCountingDown]);
 
-  // Race animation - characters move based on countdown duration and track length
+  // Race animation
   useEffect(() => {
     if (!isRacing) {
       isRacingRef.current = false;
@@ -112,22 +108,30 @@ export const usePoolRace = () => {
       const deltaTime = now - lastFrameTime;
       lastFrameTime = now;
       
-      // Target speed: 100% track / totalDuration ms, per frame
+      // Base speed: cover 100% of track in totalDuration
       const baseFrameSpeed = (100 / totalDuration) * deltaTime;
+      
+      // Sprint phase in last 20% of race
+      const isInSprintPhase = elapsed > totalDuration * 0.8;
       
       setRacers(prev => {
         const updated = prev.map(racer => {
           if (racer.finished) return racer;
           
-          // Randomness: each racer gets a multiplier between 0.4 and 1.8
+          // Randomness: bursts and slowdowns
           const rand = Math.random();
           let speedMultiplier: number;
-          if (rand > 0.9) {
-            speedMultiplier = 1.4 + Math.random() * 0.4; // burst
-          } else if (rand < 0.1) {
-            speedMultiplier = 0.3 + Math.random() * 0.2; // slow down
+          if (rand > 0.92) {
+            speedMultiplier = 1.5 + Math.random() * 0.5; // burst
+          } else if (rand < 0.08) {
+            speedMultiplier = 0.3 + Math.random() * 0.2; // slow
           } else {
-            speedMultiplier = 0.7 + Math.random() * 0.6; // normal variance
+            speedMultiplier = 0.7 + Math.random() * 0.6; // normal
+          }
+          
+          // Sprint boost
+          if (isInSprintPhase) {
+            speedMultiplier *= 1.3;
           }
           
           const currentSpeed = baseFrameSpeed * racer.baseSpeed * speedMultiplier * 1.8;
@@ -169,6 +173,11 @@ export const usePoolRace = () => {
           setRaceFinished(true);
         }
         
+        // Update sprint phase state
+        if (isInSprintPhase) {
+          setIsSprintPhase(true);
+        }
+        
         return updated;
       });
       
@@ -187,10 +196,7 @@ export const usePoolRace = () => {
   }, [isRacing]);
 
   const startRace = useCallback((countdownTime: number) => {
-    const baseDuration = 8000;
-    const countdownBonus = countdownTime * 1500;
-    raceDurationRef.current = Math.min(baseDuration + countdownBonus, 20000);
-    
+    // Reset racers
     setRacers(prev => prev.map(racer => ({
       ...racer,
       position: 0,
@@ -208,16 +214,16 @@ export const usePoolRace = () => {
     setIsSprintPhase(false);
     finishOrderRef.current = 0;
     
-    // Race duration = countdown time (min 5s) — racers finish around when countdown hits 0
+    // Race duration = countdown time (min 5s)
     const duration = Math.max(countdownTime * 1000, 5000);
     raceStartTimeRef.current = Date.now();
     raceDurationRef.current = duration;
+    
+    // Start racing AND countdown simultaneously
     setIsRacing(true);
     
     if (countdownTime > 0) {
-      startCountdown(countdownTime, () => {
-        // Countdown finished — race continues until all cross finish
-      });
+      startCountdown(countdownTime);
     }
   }, [startCountdown]);
 
@@ -232,6 +238,7 @@ export const usePoolRace = () => {
     setIsRacing(false);
     setIsCountingDown(false);
     setCurrentCountdown(0);
+    setTotalCountdown(0);
     setIsSprintPhase(false);
     setRacers(prev => prev.map(racer => ({
       ...racer,
@@ -253,6 +260,7 @@ export const usePoolRace = () => {
     isRacing,
     isCountingDown,
     currentCountdown,
+    totalCountdown,
     winner,
     loser,
     raceFinished,

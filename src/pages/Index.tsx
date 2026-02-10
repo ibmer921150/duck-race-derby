@@ -33,6 +33,7 @@ const Index: React.FC = () => {
     loser,
     raceFinished,
     isSprintPhase,
+    totalCountdown,
     initializeRacers,
     startRace,
     resetRace,
@@ -126,6 +127,7 @@ const Index: React.FC = () => {
                 theme={theme}
                 raceFinished={raceFinished}
                 isSprintPhase={isSprintPhase}
+                totalCountdown={totalCountdown}
               />
             ) : (
               <div className="bg-gradient-to-b from-secondary to-pond-dark rounded-2xl h-64 flex items-center justify-center">

@@ -18,6 +18,7 @@ interface PoolRaceTrackProps {
   isRacing: boolean;
   isCountingDown?: boolean;
   currentCountdown?: number;
+  totalCountdown?: number;
   winner?: Racer;
   theme: RaceTheme;
   raceFinished?: boolean;
@@ -25,17 +26,25 @@ interface PoolRaceTrackProps {
 }
 
 const THEME_BACKGROUNDS: Record<RaceTheme, string> = {
-  duck: 'from-secondary to-pond-dark',
-  horse: 'from-green-500 to-green-800',
-  car: 'from-gray-600 to-gray-900',
-  marble: 'from-purple-500 to-purple-900',
+  duck: 'from-sky-300 via-cyan-400 to-blue-600',
+  horse: 'from-lime-400 via-green-500 to-emerald-700',
+  car: 'from-slate-500 via-gray-600 to-gray-900',
+  marble: 'from-violet-400 via-purple-500 to-indigo-800',
+};
+
+const THEME_EMOJIS: Record<RaceTheme, { bg1: string; bg2: string }> = {
+  duck: { bg1: '🌊', bg2: '💦' },
+  horse: { bg1: '🌾', bg2: '☀️' },
+  car: { bg1: '🛣️', bg2: '💨' },
+  marble: { bg1: '✨', bg2: '⭐' },
 };
 
 const PoolRaceTrack: React.FC<PoolRaceTrackProps> = ({ 
   racers, 
   isRacing, 
   isCountingDown, 
-  currentCountdown,
+  currentCountdown = 0,
+  totalCountdown = 0,
   winner, 
   theme,
   raceFinished,
@@ -54,18 +63,18 @@ const PoolRaceTrack: React.FC<PoolRaceTrackProps> = ({
 
       const frame = () => {
         confetti({
-          particleCount: 3,
+          particleCount: 5,
           angle: 60,
           spread: 55,
           origin: { x: 0, y: 0.7 },
-          colors: ['#FFD700', '#FFA500', '#FF6B6B', '#4ECDC4'],
+          colors: ['#FFD700', '#FF6B6B', '#4ECDC4', '#FF9500', '#E91E63'],
         });
         confetti({
-          particleCount: 3,
+          particleCount: 5,
           angle: 120,
           spread: 55,
           origin: { x: 1, y: 0.7 },
-          colors: ['#FFD700', '#FFA500', '#FF6B6B', '#4ECDC4'],
+          colors: ['#FFD700', '#FF6B6B', '#4ECDC4', '#FF9500', '#E91E63'],
         });
 
         if (Date.now() < end) {
@@ -76,102 +85,138 @@ const PoolRaceTrack: React.FC<PoolRaceTrackProps> = ({
     }
   }, [raceFinished, winner]);
 
-  // Reset confetti flag when race resets
+  // Reset confetti flag
   useEffect(() => {
     if (!raceFinished) {
       confettiFired.current = false;
     }
   }, [raceFinished]);
 
-  // Calculate Y positions for racers to spread them vertically
   const getYPosition = (racer: Racer, index: number) => {
     const totalRacers = racers.length;
-    const trackHeight = 100; // percentage
-    const margin = 10; // top/bottom margin
-    const usableHeight = trackHeight - margin * 2;
-    
-    // Distribute racers vertically with some randomness
+    const margin = 10;
+    const usableHeight = 100 - margin * 2;
     const baseY = margin + (index / Math.max(totalRacers - 1, 1)) * usableHeight;
     const wobble = racer.yOffset || 0;
-    
-    return Math.max(margin, Math.min(trackHeight - margin, baseY + wobble));
+    return Math.max(margin, Math.min(90, baseY + wobble));
   };
+
+  // Show countdown numbers only for last 3 seconds
+  const showCountdownNumber = isCountingDown && currentCountdown <= 3 && currentCountdown > 0;
 
   return (
     <div 
       ref={trackRef}
-      className={`relative rounded-2xl overflow-hidden shadow-xl bg-gradient-to-b ${THEME_BACKGROUNDS[theme]}`}
+      className={`relative rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-b ${THEME_BACKGROUNDS[theme]} border-4 border-white/20`}
       style={{ minHeight: '600px', height: '70vh', maxHeight: '800px' }}
     >
-      {/* Track header */}
-      <div className="bg-black/20 px-4 py-2 text-center z-20 relative">
-        <span className="text-white/90 font-bold text-sm">
-          {isSprintPhase ? '🔥 SPRINT! SPRINT! SPRINT!' :
-           isRacing ? '🏃 GO GO GO!' : 
-           raceFinished ? '🎉 Race Complete!' : '🏁 Ready to Race'}
-        </span>
+      {/* Top bar with countdown timer */}
+      <div className="bg-black/30 backdrop-blur-sm px-4 py-3 text-center z-20 relative flex items-center justify-center gap-4">
+        {/* Countdown timer display at top */}
+        {isCountingDown && currentCountdown > 0 ? (
+          <div className="flex items-center gap-3">
+            <span className="text-white/80 font-bold text-lg">⏱️</span>
+            <span className={`font-black text-3xl drop-shadow-lg ${
+              currentCountdown <= 3 ? 'text-yellow-300 animate-countdown' : 'text-white'
+            }`}>
+              {currentCountdown}
+            </span>
+            <span className="text-white/80 font-bold text-lg">
+              {currentCountdown <= 3 ? '🔥' : '⏱️'}
+            </span>
+          </div>
+        ) : (
+          <span className="text-white font-bold text-lg tracking-wide">
+            {isSprintPhase ? '🔥 SPRINT! SPRINT! SPRINT! 🔥' :
+             isRacing ? '🏃 GO GO GO! 🏃' : 
+             raceFinished ? '🎉 Race Complete! 🎉' : '🏁 Ready to Race! 🏁'}
+          </span>
+        )}
       </div>
 
-      {/* Countdown overlay */}
-      {isCountingDown && (
-        <div className="absolute inset-0 flex items-center justify-center z-50 bg-black/40">
-          <div className="text-8xl font-bold text-white animate-countdown drop-shadow-lg">
-            {currentCountdown > 0 ? currentCountdown : 'GO!'}
+      {/* Big countdown overlay — only for last 3 seconds */}
+      {showCountdownNumber && (
+        <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
+          <div className="text-[10rem] font-black text-white/30 animate-countdown drop-shadow-2xl select-none">
+            {currentCountdown}
           </div>
         </div>
       )}
 
-      {/* Start line with label */}
-      <div className="absolute left-[8%] top-12 bottom-4 w-1 bg-white/50 z-10">
-        <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-white font-bold text-sm whitespace-nowrap">
-          START
+      {/* "GO!" flash when countdown hits 0 */}
+      {isCountingDown && currentCountdown === 0 && (
+        <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
+          <div className="text-8xl font-black text-yellow-300 animate-countdown drop-shadow-2xl">
+            GO! 🚀
+          </div>
+        </div>
+      )}
+
+      {/* Start line */}
+      <div className="absolute left-[8%] top-14 bottom-4 w-1.5 bg-white/60 z-10 rounded-full">
+        <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-sm text-white font-black text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
+          🏁 START
         </div>
       </div>
       
-      {/* Finish line with label */}
+      {/* Finish line */}
       <div 
-        className="absolute right-[5%] top-12 bottom-4 w-3 z-10"
+        className="absolute right-[5%] top-14 bottom-4 w-4 z-10 rounded-sm"
         style={{
-          background: 'repeating-linear-gradient(0deg, white 0px, white 8px, #333 8px, #333 16px)'
+          background: 'repeating-linear-gradient(0deg, white 0px, white 8px, #222 8px, #222 16px)'
         }}
       >
-        <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-white font-bold text-sm whitespace-nowrap">
-          FINISH
+        <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-sm text-white font-black text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
+          🏆 FINISH
         </div>
       </div>
 
-      {/* Racing area - all racers in same pool */}
-      <div className="absolute inset-0 top-12 bottom-4 left-0 right-0">
+      {/* Racing area */}
+      <div className="absolute inset-0 top-14 bottom-4 left-0 right-0">
         {racers.map((racer, index) => {
           const isWinner = winner?.id === racer.id;
-          const xPosition = 8 + Math.min(racer.position, 100) * 0.82; // 8% start, 90% finish
+          const xPosition = 8 + Math.min(racer.position, 100) * 0.82;
           const yPosition = getYPosition(racer, index);
+          const crossedFinish = racer.position >= 100;
           
           return (
             <div
               key={racer.id}
-              className="absolute transition-all duration-75 ease-linear"
+              className={`absolute transition-all duration-75 ease-linear ${crossedFinish ? 'z-40' : ''}`}
               style={{
                 left: `${xPosition}%`,
                 top: `${yPosition}%`,
                 transform: 'translate(-50%, -50%)',
-                zIndex: isWinner ? 100 : Math.round(racer.position),
+                zIndex: isWinner ? 100 : crossedFinish ? 50 : Math.round(racer.position),
               }}
             >
-              {/* Name tag ABOVE the character */}
+              {/* Name tag */}
               <div 
                 className={`
-                  absolute -top-6 left-1/2 -translate-x-1/2
-                  px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap z-30
-                  ${isWinner ? 'bg-winner-gold text-foreground' : 'bg-black/60 text-white'}
-                  shadow-md
+                  absolute -top-7 left-1/2 -translate-x-1/2
+                  px-2 py-0.5 rounded-full text-xs font-black whitespace-nowrap z-30
+                  ${isWinner 
+                    ? 'bg-yellow-400 text-gray-900 shadow-lg shadow-yellow-400/50 scale-110' 
+                    : crossedFinish 
+                      ? 'bg-green-500 text-white shadow-md' 
+                      : 'bg-black/50 text-white backdrop-blur-sm'}
                 `}
               >
-                {isWinner && '👑 '}{racer.name}
+                {isWinner && '👑 '}{crossedFinish && !isWinner && '✅ '}{racer.name}
               </div>
               
-              {/* Character */}
-              <div className="relative">
+              {/* Character with finish-crossing glow */}
+              <div className={`relative ${isWinner ? 'scale-125' : ''} transition-transform duration-300`}>
+                {/* Winner glow ring */}
+                {isWinner && (
+                  <div className="absolute inset-0 -m-3 rounded-full bg-yellow-400/40 animate-ping" />
+                )}
+                
+                {/* Finish flash */}
+                {crossedFinish && !isWinner && (
+                  <div className="absolute inset-0 -m-2 rounded-full bg-green-400/30 animate-pulse" />
+                )}
+                
                 <RaceCharacter
                   theme={theme}
                   color={racer.color}
@@ -179,7 +224,7 @@ const PoolRaceTrack: React.FC<PoolRaceTrackProps> = ({
                   isWinner={isWinner}
                 />
                 
-                {/* Speed lines when racing */}
+                {/* Speed lines */}
                 {isRacing && !racer.finished && (
                   <div className="absolute -left-6 top-1/2 -translate-y-1/2 flex gap-0.5 opacity-60">
                     {[...Array(isSprintPhase ? 5 : 3)].map((_, i) => (
@@ -203,43 +248,30 @@ const PoolRaceTrack: React.FC<PoolRaceTrackProps> = ({
       {/* Sprint phase indicator */}
       {isSprintPhase && (
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute inset-0 bg-red-500/10 animate-pulse" />
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded-full font-bold animate-bounce">
+          <div className="absolute inset-0 bg-orange-500/10 animate-pulse" />
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-red-500 to-orange-500 text-white px-6 py-2 rounded-full font-black text-lg animate-bounce shadow-lg shadow-red-500/30">
             🔥 FINAL SPRINT! 🔥
           </div>
         </div>
       )}
 
+      {/* Winner announcement overlay */}
+      {raceFinished && winner && (
+        <div className="absolute inset-0 pointer-events-none flex items-end justify-center pb-16 z-30">
+          <div className="bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-gray-900 px-8 py-4 rounded-2xl font-black text-2xl shadow-2xl shadow-yellow-500/40 animate-scale-in border-4 border-white/40">
+            👑 {winner.name} WINS! 🏆
+          </div>
+        </div>
+      )}
+
       {/* Racer count */}
-      <div className="absolute bottom-2 left-4 bg-black/40 text-white text-xs px-2 py-1 rounded z-20">
+      <div className="absolute bottom-2 left-4 bg-black/40 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full z-20 font-bold">
         {racers.length} racers
       </div>
 
       {/* Theme decorations */}
-      {theme === 'duck' && (
-        <>
-          <div className="absolute bottom-2 right-4 text-2xl opacity-50 pointer-events-none">🌊</div>
-          <div className="absolute top-14 right-20 text-xl opacity-40 pointer-events-none">💨</div>
-        </>
-      )}
-      {theme === 'horse' && (
-        <>
-          <div className="absolute bottom-2 right-4 text-2xl opacity-50 pointer-events-none">🌾</div>
-          <div className="absolute top-14 right-20 text-xl opacity-40 pointer-events-none">☀️</div>
-        </>
-      )}
-      {theme === 'car' && (
-        <>
-          <div className="absolute bottom-2 right-4 text-2xl opacity-50 pointer-events-none">🛣️</div>
-          <div className="absolute top-14 right-20 text-xl opacity-40 pointer-events-none">💨</div>
-        </>
-      )}
-      {theme === 'marble' && (
-        <>
-          <div className="absolute bottom-2 right-4 text-2xl opacity-50 pointer-events-none">✨</div>
-          <div className="absolute top-14 right-20 text-xl opacity-40 pointer-events-none">⭐</div>
-        </>
-      )}
+      <div className="absolute bottom-2 right-4 text-2xl opacity-50 pointer-events-none">{THEME_EMOJIS[theme].bg1}</div>
+      <div className="absolute top-16 right-20 text-xl opacity-40 pointer-events-none">{THEME_EMOJIS[theme].bg2}</div>
     </div>
   );
 };
