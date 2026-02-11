@@ -37,9 +37,9 @@ const RaceControls: React.FC<RaceControlsProps> = ({
           id="countdown"
           type="number"
           min={0}
-          max={60}
+          max={3600}
           value={countdownTime}
-          onChange={(e) => onCountdownChange(Math.max(0, Math.min(60, parseInt(e.target.value) || 0)))}
+          onChange={(e) => onCountdownChange(Math.max(0, Math.min(3600, parseInt(e.target.value) || 0)))}
           disabled={isRacing || isCountingDown}
           className="w-24 bg-card text-card-foreground border-2 border-secondary/30"
         />
