@@ -77,8 +77,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ racers, isVisible }) => {
               </span>
               
               {racer.finishTime && (
-                <span className="text-xs text-muted-foreground">
-                  {(racer.finishTime / 1000).toFixed(2)}s
+                <span className="text-xs text-muted-foreground font-mono">
+                  {(racer.finishTime / 1000).toFixed(4)}s
                 </span>
               )}
             </div>
