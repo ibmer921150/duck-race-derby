@@ -601,7 +601,12 @@ export const usePoolRace = () => {
       startCountdown(countdownTime);
     }
     
-    // Set up dramatic leader system - pick 1-2 racers every 5 seconds
+    // Set up dramatic leader system - more aggressive for longer races (>60s)
+    const isLongRace = countdownTime > 60;
+    const selectionInterval = isLongRace ? 3000 : 5000; // 3s for long races, 5s for short
+    const burstDuration = isLongRace ? 5000 : 4000; // 5s for long races, 4s for short
+    const maxPickCount = isLongRace ? 3 : 2; // Pick 2-3 for long races, 1-2 for short
+    
     dramaticLeadersUsedRef.current = new Set();
     if (dramaticLeaderIntervalRef.current) {
       clearInterval(dramaticLeaderIntervalRef.current);
@@ -619,8 +624,11 @@ export const usePoolRace = () => {
         
         if (candidates.length === 0) return prev;
         
-        // Pick 1-2 racers randomly
-        const pickCount = Math.min(Math.random() > 0.5 ? 2 : 1, candidates.length);
+        // Pick racers based on race length
+        const pickCount = Math.min(
+          Math.floor(Math.random() * maxPickCount) + 1,
+          candidates.length
+        );
         const shuffled = [...candidates].sort(() => Math.random() - 0.5);
         const chosen = shuffled.slice(0, pickCount);
         
@@ -630,20 +638,20 @@ export const usePoolRace = () => {
           console.log(`🎭 [Dramatic Leader] ${r.name} selected for burst!`);
         });
         
-        // Apply burst that lasts 4 seconds with 4x speed
+        // Apply burst with duration based on race length
         return prev.map(racer => {
           const isChosen = chosen.find(c => c.id === racer.id);
           if (isChosen) {
             return {
               ...racer,
               dramaticLeader: true,
-              dramaticBurstUntil: now + 4000, // 4 second burst
+              dramaticBurstUntil: now + burstDuration,
             };
           }
           return racer;
         });
       });
-    }, 5000); // Every 5 seconds
+    }, selectionInterval);
   }, [startCountdown]);
 
   const resetRace = useCallback(() => {
