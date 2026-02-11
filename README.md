@@ -1,73 +1,172 @@
-# Welcome to your Lovable project
+# 🦆 Duck Race Derby
 
-## Project info
+An interactive racing simulation game where you can race ducks, horses, cars, or marbles with realistic racing behaviors and strategies!
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+**Live Demo**: https://ibmer921150.github.io/duck-race-derby/
 
-## How can I edit this code?
+## 🎮 Features
 
-There are several ways of editing your application.
+- Support for up to 2000 racers
+- Multiple racing themes: 🦆 Duck, 🐴 Horse, 🏎️ Car, 🔮 Marble
+- Configurable countdown timer
+- 15+ unique racing behaviors (sprint, burnout, clutch comeback, etc.)
+- Real-time leaderboard
+- Animated race results with confetti celebration
 
-**Use Lovable**
+## 🚀 Getting Started
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### Prerequisites
 
-Changes made via Lovable will be committed automatically to this repo.
+- Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+### Local Development
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# Clone the repository
+git clone https://github.com/ibmer921150/duck-race-derby.git
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Navigate to the project directory
+cd duck-race-derby
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The application will be available at `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
+## 🛠️ Technologies
 
 This project is built with:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- **Vite** - Fast build tool and dev server
+- **React 18** - UI library with hooks
+- **TypeScript** - Type-safe JavaScript
+- **Tailwind CSS** - Utility-first CSS framework
+- **shadcn/ui** - High-quality React components built on Radix UI
+- **React Router** - Client-side routing
+- **Tanstack Query** - Data fetching and state management
+- **canvas-confetti** - Celebration animations
 
-## How can I deploy this project?
+## 📦 Duck Race Derby Code Structure & Architecture Overview
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+```
+src/
+├── components/          # React components
+│   ├── Duck.tsx        # Duck character component
+│   ├── RaceCharacter.tsx    # Generic race character renderer
+│   ├── PoolRaceTrack.tsx    # Main race track with lanes
+│   ├── RaceControls.tsx     # Start/reset controls
+│   ├── Leaderboard.tsx      # Final standings display
+│   ├── RaceResults.tsx      # Winner/loser announcements
+│   ├── NameInput.tsx        # Racer name input
+│   ├── ThemeSelector.tsx    # Theme selection UI
+│   └── ui/                  # shadcn/ui components
+├── hooks/
+│   ├── usePoolRace.ts       # Main racing logic with 15+ behaviors
+│   ├── useRace.ts           # Alternative racing implementation
+│   └── use-toast.ts         # Toast notification hook
+├── lib/
+│   └── utils.ts             # Utility functions
+├── pages/
+│   ├── Index.tsx            # Main game page
+│   └── NotFound.tsx         # 404 page
+├── App.tsx                   # Root component with routing
+└── main.tsx                  # Application entry point
+```
 
-## Can I connect a custom domain to my Lovable project?
+### Key Architecture Features
 
-Yes, you can!
+- **Racing Behaviors**: 15+ unique racing strategies including sprint start, slow burn, comeback kid, burnout, clutch performance, and more
+- **Configurable Settings**: Adjustable countdown timer and racer count
+- **Theme System**: Multiple character themes with animated sprites
+- **Responsive Design**: Mobile-friendly interface with Tailwind CSS
+- **Type Safety**: Full TypeScript coverage for better development experience
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 🌐 Deployment to GitHub Pages
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+This project is configured for automatic deployment to GitHub Pages.
+
+### Deploy Your Own Copy
+
+1. **Fork or clone this repository**
+
+2. **Update the base path** in `vite.config.ts`:
+   ```typescript
+   base: mode === "production" ? "/your-repo-name/" : "/"
+   ```
+
+3. **Install dependencies and deploy**:
+   ```bash
+   npm install
+   npm run deploy
+   ```
+
+4. **Enable GitHub Pages**:
+   - Go to your repository Settings → Pages
+   - Source: Deploy from a branch
+   - Branch: `gh-pages` → `/ (root)`
+   - Save
+
+5. **Access your site**:
+   ```
+   https://your-username.github.io/your-repo-name/
+   ```
+
+### Update Deployed Site
+
+```bash
+# Make your changes, then:
+git add .
+git commit -m "Your changes"
+git push origin main
+
+# Deploy to GitHub Pages
+npm run deploy
+```
+
+The site will update in 1-2 minutes after deployment.
+
+## 📝 Available Scripts
+
+```bash
+npm run dev          # Start development server on port 8080
+npm run build        # Build for production
+npm run preview      # Preview production build locally
+npm run deploy       # Deploy to GitHub Pages
+npm run lint         # Run ESLint
+npm run test         # Run tests
+npm run test:watch   # Run tests in watch mode
+```
+
+## 🎯 Custom Domain (Optional)
+
+You can connect a custom domain to your GitHub Pages site:
+
+1. Purchase a domain from Namecheap, Google Domains, etc.
+2. Configure DNS records to point to GitHub Pages
+3. Add your domain in repository Settings → Pages → Custom domain
+4. Create a `public/CNAME` file with your domain name
+
+Read more: [GitHub Pages Custom Domain Documentation](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site)
+
+## 🤝 Contributing
+
+Contributions are welcome! Feel free to:
+- Report bugs
+- Suggest new features
+- Submit pull requests
+
+## 📄 License
+
+MIT License - feel free to use this project for learning or building your own racing games!
+
+## 🔗 Repository
+
+**GitHub Repository**: https://github.com/ibmer921150/duck-race-derby
+
+---
+
+**Have fun racing! 🏁🦆**
