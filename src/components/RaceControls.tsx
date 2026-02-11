@@ -25,6 +25,12 @@ const RaceControls: React.FC<RaceControlsProps> = ({
   currentCountdown,
   canStart,
 }) => {
+  const [inputValue, setInputValue] = React.useState(countdownTime.toString());
+
+  React.useEffect(() => {
+    setInputValue(countdownTime.toString());
+  }, [countdownTime]);
+
   return (
     <div className="flex flex-wrap items-end gap-4">
       {/* Countdown setting */}
@@ -38,8 +44,23 @@ const RaceControls: React.FC<RaceControlsProps> = ({
           type="number"
           min={0}
           max={3600}
-          value={countdownTime}
-          onChange={(e) => onCountdownChange(Math.max(0, Math.min(3600, parseInt(e.target.value) || 0)))}
+          value={inputValue}
+          onChange={(e) => {
+            const value = e.target.value;
+            setInputValue(value);
+            if (value !== '') {
+              const numValue = parseInt(value);
+              if (!isNaN(numValue)) {
+                onCountdownChange(Math.max(0, Math.min(3600, numValue)));
+              }
+            }
+          }}
+          onBlur={() => {
+            if (inputValue === '' || parseInt(inputValue) < 1) {
+              onCountdownChange(3);
+              setInputValue('3');
+            }
+          }}
           disabled={isRacing || isCountingDown}
           className="w-24 bg-card text-card-foreground border-2 border-secondary/30"
         />
