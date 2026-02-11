@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect, useLayoutEffect } from 'react';
 import { flushSync } from 'react-dom';
+import { audioManager, type ThemeType } from '@/lib/audioManager';
 
 type RacingBehavior =
   | 'slow-mid-fade' // Slow start → mid surge → late fade
@@ -143,7 +144,7 @@ const calculateBehaviorMultiplier = (behavior: RacingBehavior, progress: number,
   }
 };
 
-export const usePoolRace = () => {
+export const usePoolRace = (theme: ThemeType = 'duck') => {
   const [racers, setRacers] = useState<Racer[]>([]);
   const [isRacing, setIsRacing] = useState(false);
   const [isCountingDown, setIsCountingDown] = useState(false);
@@ -166,6 +167,12 @@ export const usePoolRace = () => {
   const dramaticLeaderIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const dramaticLeadersUsedRef = useRef<Set<number>>(new Set());
   const dramaticLeaderBoost = 4.0; // 4x speed boost during dramatic burst
+  const themeRef = useRef<ThemeType>(theme);
+  
+  // Update theme ref when theme changes
+  useEffect(() => {
+    themeRef.current = theme;
+  }, [theme]);
 
   const initializeRacers = useCallback((names: string[]) => {
     const validNames = names.filter(n => n.trim()).slice(0, 2000);
@@ -459,6 +466,10 @@ export const usePoolRace = () => {
           setLoser(sorted[sorted.length - 1]);
           setRaceFinished(true);
           
+          // Stop background music and play winner sound
+          audioManager.stopBackgroundMusic();
+          audioManager.playWinnerSound();
+          
           console.log('\n🏁 [Race Finished] Final Results:');
           sorted.slice(0, Math.min(5, sorted.length)).forEach((racer, idx) => {
             const earlyLeaderTag = racer.earlyLeader ? ' ⚠️ (was early leader)' : '';
@@ -592,6 +603,10 @@ export const usePoolRace = () => {
     console.log('🏁 [startRace] Race params set - startTime:', raceStartTimeRef.current, 'duration:', duration);
     console.log('🏁 [startRace] About to call setIsRacing(true) - this should trigger useEffect');
     
+    // Play audio when race starts
+    audioManager.playStartSound();
+    audioManager.playBackgroundMusic(themeRef.current);
+    
     // Start racing AND countdown simultaneously
     setIsRacing(true);
     
@@ -666,6 +681,9 @@ export const usePoolRace = () => {
       clearInterval(dramaticLeaderIntervalRef.current);
     }
     dramaticLeadersUsedRef.current.clear();
+    
+    // Stop all audio
+    audioManager.stopBackgroundMusic();
     setIsRacing(false);
     setIsCountingDown(false);
     setCurrentCountdown(0);

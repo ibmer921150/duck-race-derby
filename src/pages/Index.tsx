@@ -7,6 +7,9 @@ import Leaderboard from '@/components/Leaderboard';
 import ThemeSelector from '@/components/ThemeSelector';
 import { RaceTheme } from '@/components/RaceCharacter';
 import { usePoolRace } from '@/hooks/usePoolRace';
+import { audioManager } from '@/lib/audioManager';
+import { Button } from '@/components/ui/button';
+import { Volume2, VolumeX } from 'lucide-react';
 
 const THEME_TITLES: Record<RaceTheme, string> = {
   duck: '🦆 Duck Racing! 🏁',
@@ -29,9 +32,10 @@ const Index: React.FC = () => {
   const [names, setNames] = useState<string>('');
   const [countdownTime, setCountdownTime] = useState<number>(3);
   const [theme, setTheme] = useState<RaceTheme>('duck');
+  const [audioEnabled, setAudioEnabled] = useState<boolean>(true);
   
-  // Custom hook - always called in the same order
-  const raceState = usePoolRace();
+  // Custom hook - always called in the same order (pass theme as parameter)
+  const raceState = usePoolRace(theme);
   
   const {
     racers,
@@ -62,6 +66,12 @@ const Index: React.FC = () => {
 
   const handleReset = () => {
     resetRace();
+  };
+
+  const toggleAudio = () => {
+    const newAudioState = !audioEnabled;
+    setAudioEnabled(newAudioState);
+    audioManager.setMuted(!newAudioState);
   };
 
   const canStart = racers.length >= 2;
@@ -122,6 +132,27 @@ const Index: React.FC = () => {
                   Enter some names above to get started!
                 </p>
               )}
+            </div>
+            
+            {/* Audio Toggle Button */}
+            <div className="flex justify-center">
+              <Button
+                onClick={toggleAudio}
+                variant="outline"
+                className="gap-2"
+              >
+                {audioEnabled ? (
+                  <>
+                    <Volume2 className="h-4 w-4" />
+                    Sound On
+                  </>
+                ) : (
+                  <>
+                    <VolumeX className="h-4 w-4" />
+                    Sound Off
+                  </>
+                )}
+              </Button>
             </div>
           </div>
 
