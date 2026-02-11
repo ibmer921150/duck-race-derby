@@ -4,11 +4,25 @@ An interactive racing simulation game where you can race ducks, horses, cars, or
 
 **Live Demo**: https://ibmer921150.github.io/duck-race-derby/
 
+## 💭 Author's Note
+
+This is my **vibe coding project** - a creative playground where I explore new ideas and technologies while having fun! 🎨
+
+**Development Journey:**
+- 🎯 **Initial UI**: Built with [Lovable](https://lovable.dev) for rapid prototyping
+- 🤖 **AI-Assisted Development**: Enhanced and optimized with GitHub Copilot
+- 🔧 **Hands-on Coding**: Custom features, troubleshooting, and debugging done with passion
+- 🎵 **Latest Addition**: Integrated Howler.js for immersive audio experience
+
+This project represents the perfect blend of AI-assisted tools and traditional coding skills. It's proof that modern development can be both efficient and enjoyable when you combine the right tools with creative vision!
+
 ## 🎮 Features
 
 - Support for up to 2000 racers
 - Multiple racing themes: 🦆 Duck, 🐴 Horse, 🏎️ Car, 🔮 Marble
+- Theme-based background music and sound effects ([Audio Setup Guide](public/audio/README.md))
 - Configurable countdown timer
+- Toggle audio on/off during races
 - 15+ unique racing behaviors (sprint, burnout, clutch comeback, etc.)
 - Real-time leaderboard
 - Animated race results with confetti celebration
@@ -49,6 +63,7 @@ This project is built with:
 - **React Router** - Client-side routing
 - **Tanstack Query** - Data fetching and state management
 - **canvas-confetti** - Celebration animations
+- **Howler.js** - Cross-browser audio library for music and sound effects
 
 ## 📦 Duck Race Derby Code Structure & Architecture Overview
 
@@ -69,17 +84,31 @@ src/
 │   ├── useRace.ts           # Alternative racing implementation
 │   └── use-toast.ts         # Toast notification hook
 ├── lib/
-│   └── utils.ts             # Utility functions
+│   ├── utils.ts             # Utility functions
+│   └── audioManager.ts      # Audio management singleton
 ├── pages/
 │   ├── Index.tsx            # Main game page
 │   └── NotFound.tsx         # 404 page
 ├── App.tsx                   # Root component with routing
 └── main.tsx                  # Application entry point
+
+public/
+└── audio/                    # Audio assets
+    ├── music/                # Background music for each theme
+    │   ├── duck.mp3          # Duck theme music
+    │   ├── horse.mp3         # Horse theme music
+    │   ├── car.mp3           # Car theme music
+    │   └── marble.mp3        # Marble theme music
+    ├── sfx/                  # Sound effects
+    │   ├── start.mp3         # Race start sound
+    │   └── winner.mp3        # Winner celebration sound
+    └── README.md             # Audio setup guide
 ```
 
 ### Key Architecture Features
 
 - **Racing Behaviors**: 15+ unique racing strategies including sprint start, slow burn, comeback kid, burnout, clutch performance, and more
+- **Audio System**: Theme-based background music with sound effects for race start and winner celebrations, powered by Howler.js singleton pattern
 - **Configurable Settings**: Adjustable countdown timer and racer count
 - **Theme System**: Multiple character themes with animated sprites
 - **Responsive Design**: Mobile-friendly interface with Tailwind CSS
@@ -170,3 +199,5 @@ MIT License - feel free to use this project for learning or building your own ra
 ---
 
 **Have fun racing! 🏁🦆**
+
+https://ibmer921150.github.io/duck-race-derby/
