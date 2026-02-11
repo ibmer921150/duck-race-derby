@@ -33,6 +33,8 @@ interface Racer {
   behavior: RacingBehavior;
   behaviorCycle?: number; // For cyclic behaviors
   earlyLeader?: boolean; // True if was in top 3 early in the race
+  dramaticLeader?: boolean; // True if this racer was selected as a dramatic leader
+  dramaticBurstUntil?: number; // Timestamp when dramatic boost ends
 }
 
 const DUCK_COLORS = [
@@ -160,6 +162,10 @@ export const usePoolRace = () => {
   const raceStartTimeRef = useRef<number>(0);
   const raceDurationRef = useRef<number>(10000);
   const isRacingRef = useRef(false);
+  const lastFrameTimeRef = useRef<number>(0);
+  const dramaticLeaderIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const dramaticLeadersUsedRef = useRef<Set<number>>(new Set());
+  const dramaticLeaderBoost = 4.0; // 4x speed boost during dramatic burst
 
   const initializeRacers = useCallback((names: string[]) => {
     const validNames = names.filter(n => n.trim()).slice(0, 2000);
@@ -179,6 +185,8 @@ export const usePoolRace = () => {
         yOffset: (Math.random() - 0.5) * 8,
         behavior,
         behaviorCycle: Math.random() * Math.PI * 2, // Random phase for cyclic behaviors
+        dramaticLeader: false,
+        dramaticBurstUntil: undefined,
       };
     });
     console.log(`🎭 [Behaviors Summary] Total racers: ${newRacers.length}, Unique behaviors assigned`);
@@ -399,8 +407,18 @@ export const usePoolRace = () => {
             }
           }
           
+          // Dramatic leader boost: 4x speed when burst is active
+          let dramaticBoost = 1.0;
+          if (racer.dramaticBurstUntil && now < racer.dramaticBurstUntil) {
+            dramaticBoost = dramaticLeaderBoost;
+            const timeLeft = (racer.dramaticBurstUntil - now) / 1000;
+            if (frameCount % 60 === 0) {
+              console.log(`🎭💨 [Dramatic Boost Active] ${racer.name} - Position: ${racer.position.toFixed(1)}%, Boost: ${dramaticBoost}x, Time left: ${timeLeft.toFixed(1)}s`);
+            }
+          }
+          
           // Combine all multipliers: timing adjustment is now the DOMINANT factor
-          const currentSpeed = baseFrameSpeed * racer.baseSpeed * behaviorMultiplier * randomMultiplier * sprintMultiplier * earlyLeaderPenalty * timingAdjustment * 2.4;
+          const currentSpeed = baseFrameSpeed * racer.baseSpeed * behaviorMultiplier * randomMultiplier * sprintMultiplier * earlyLeaderPenalty * timingAdjustment * dramaticBoost * 2.4;
           
           const newPosition = racer.position + currentSpeed;
           
@@ -582,6 +600,50 @@ export const usePoolRace = () => {
     if (countdownTime > 0) {
       startCountdown(countdownTime);
     }
+    
+    // Set up dramatic leader system - pick 1-2 racers every 5 seconds
+    dramaticLeadersUsedRef.current = new Set();
+    if (dramaticLeaderIntervalRef.current) {
+      clearInterval(dramaticLeaderIntervalRef.current);
+    }
+    
+    dramaticLeaderIntervalRef.current = setInterval(() => {
+      const now = Date.now();
+      setRacers(prev => {
+        // Filter candidates: not finished, not already used, not current dramatic leaders
+        const candidates = prev.filter(r => 
+          !r.finished && 
+          !dramaticLeadersUsedRef.current.has(r.id) &&
+          (!r.dramaticBurstUntil || now >= r.dramaticBurstUntil)
+        );
+        
+        if (candidates.length === 0) return prev;
+        
+        // Pick 1-2 racers randomly
+        const pickCount = Math.min(Math.random() > 0.5 ? 2 : 1, candidates.length);
+        const shuffled = [...candidates].sort(() => Math.random() - 0.5);
+        const chosen = shuffled.slice(0, pickCount);
+        
+        // Mark them and add to used set
+        chosen.forEach(r => {
+          dramaticLeadersUsedRef.current.add(r.id);
+          console.log(`🎭 [Dramatic Leader] ${r.name} selected for burst!`);
+        });
+        
+        // Apply burst that lasts 4 seconds with 4x speed
+        return prev.map(racer => {
+          const isChosen = chosen.find(c => c.id === racer.id);
+          if (isChosen) {
+            return {
+              ...racer,
+              dramaticLeader: true,
+              dramaticBurstUntil: now + 4000, // 4 second burst
+            };
+          }
+          return racer;
+        });
+      });
+    }, 5000); // Every 5 seconds
   }, [startCountdown]);
 
   const resetRace = useCallback(() => {
@@ -592,6 +654,10 @@ export const usePoolRace = () => {
     if (countdownIntervalRef.current) {
       clearInterval(countdownIntervalRef.current);
     }
+    if (dramaticLeaderIntervalRef.current) {
+      clearInterval(dramaticLeaderIntervalRef.current);
+    }
+    dramaticLeadersUsedRef.current.clear();
     setIsRacing(false);
     setIsCountingDown(false);
     setCurrentCountdown(0);
@@ -606,6 +672,8 @@ export const usePoolRace = () => {
       finishOrder: undefined,
       yOffset: (Math.random() - 0.5) * 8,
       earlyLeader: false,
+      dramaticLeader: false,
+      dramaticBurstUntil: undefined,
     })));
     setWinner(null);
     setLoser(null);
