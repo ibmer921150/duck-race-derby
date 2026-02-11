@@ -8,8 +8,16 @@ interface NameInputProps {
   disabled?: boolean;
 }
 
+// Helper function to split names by multiple delimiters
+const splitNames = (names: string): string[] => {
+  return names
+    .split(/[\n,;]+/) // Split by newline, comma, or semicolon (one or more)
+    .map(n => n.trim())
+    .filter(n => n.length > 0);
+};
+
 const NameInput: React.FC<NameInputProps> = ({ names, onNamesChange, disabled }) => {
-  const nameCount = names.split('\n').filter(n => n.trim()).length;
+  const nameCount = splitNames(names).length;
   
   return (
     <div className="space-y-2">
@@ -23,14 +31,14 @@ const NameInput: React.FC<NameInputProps> = ({ names, onNamesChange, disabled })
       </div>
       <Textarea
         id="names"
-        placeholder="Enter names (one per line)&#10;e.g.&#10;Alice&#10;Bob&#10;Charlie&#10;..."
+        placeholder="Enter names (one per line, or separated by commas or semicolons)&#10;e.g.&#10;Alice, Bob, Charlie&#10;David; Eve&#10;Frank&#10;..."
         value={names}
         onChange={(e) => onNamesChange(e.target.value)}
         disabled={disabled}
         className="min-h-[200px] bg-card text-card-foreground border-2 border-secondary/30 focus:border-primary resize-y font-medium"
       />
       <p className="text-sm text-muted-foreground">
-        Tip: Paste a list of names, one per line. Maximum 2000 racers allowed.
+        Tip: Separate names with new lines, commas, or semicolons. Maximum 2000 racers allowed.
       </p>
     </div>
   );

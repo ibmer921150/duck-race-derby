@@ -15,6 +15,14 @@ const THEME_TITLES: Record<RaceTheme, string> = {
   marble: '🔮 Marble Racing! 🏁',
 };
 
+// Helper function to split names by multiple delimiters
+const splitNames = (names: string): string[] => {
+  return names
+    .split(/[\n,;]+/) // Split by newline, comma, or semicolon (one or more)
+    .map(n => n.trim())
+    .filter(n => n.length > 0);
+};
+
 // Force clean remount after hook count change
 const Index: React.FC = () => {
   // Local state hooks - always called first and in the same order
@@ -43,7 +51,7 @@ const Index: React.FC = () => {
 
   // Effect hook - always called in the same order
   useEffect(() => {
-    const nameList = names.split('\n');
+    const nameList = splitNames(names);
     initializeRacers(nameList);
   }, [names, initializeRacers]);
 
